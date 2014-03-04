@@ -5,7 +5,7 @@
 
 #define SIZE 512
 
-int main(int charc, char **argv)
+main(int charc, char **argv)
 {
 	pid_t pid;
 	int tuberia[2], readbytes;
@@ -13,7 +13,7 @@ int main(int charc, char **argv)
 	FILE *archivo;
 	pipe(tuberia);
 	
-	if ( (fork()) == 0) {
+	if ( (pid =fork()) == 0) {
 		archivo = fopen(argv[1], "w");
 		close (tuberia[1]);
 		while ( (readbytes = read(tuberia[0], buffer, SIZE)) > 0 ) {
@@ -29,7 +29,5 @@ int main(int charc, char **argv)
 			write(tuberia[1], buffer2, readbytes);
 			
 	close(tuberia[1]);
-
 }
-
 }
