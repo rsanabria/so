@@ -29,7 +29,7 @@ int main (int argc, char *argv[])
                 archivo = argv[argumentos];
                 estado = stat(archivo, &buffer);
                 if ( estado == -1 )       {
-                        printf("%s - Quitting!\n", errormessage);
+                        printf("Error fatal\n");
                         exit(1);
                 }       else{
                         printf("   File: '%s'\n", archivo);
