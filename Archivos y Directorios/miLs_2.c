@@ -7,7 +7,6 @@
 #include<time.h>
 #include <pwd.h>
 #include <grp.h>
-#include <dirent.h>
 
 #define BUFFER_SIZE 512
 void archivo(struct stat buffer,const char * path){
@@ -39,37 +38,20 @@ strftime (bufferTiempo, 100, "%d.%m.%Y %H:%M ", localtime(&buffer.st_mtime));
     printf("%s",bufferTiempo);
    printf("%s\n",path);
 }
-void directorio(const char *path,int x){
-DIR *dir;
-struct stat buffer;
-struct dirent *mi_dir;
-dir = opendir(path);
-while(( mi_dir = readdir(dir)) != NULL)
-   if(strcmp(mi_dir->d_name,"." ) && strcmp(mi_dir->d_name,".."))
-   if(x){
-     stat(mi_dir->d_name,&buffer);
-     archivo(buffer,mi_dir->d_name);
-}else
-   printf("%s\n", mi_dir->d_name);
 
-}
-void ls(const char *path,const char *path2)
+void ls(const char *path)
 {
 struct stat buffer;
 stat(path,&buffer);
 if((buffer.st_mode & S_IFREG) !=0)
    archivo(buffer, path);
-else if(!strcmp(path,"-l"))
-   directorio(path2, 1);
 else
-   directorio(path,0);
+	printf("no es regular");
 }
 
 void main(int argc, char *argv[]){
-if(argv[2])
-   ls(argv[1],argv[2]);
-else
-   ls(argv[1],NULL);
+
+ls(argv[1]);
 
 
 }
