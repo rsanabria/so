@@ -9,18 +9,22 @@
 #include<time.h>
 #include <pwd.h>
 #include <grp.h>
+#include<string.h>
 
 char *query;
-DIR *dir;
 struct stat buffer;
-struct dirent *mi_dir;
 
-void archivo(struct stat buffer,const char * path){
+int archivo(const char * path){
 
 char tiempo[100],bufferTiempo[100];
+        if(stat(path,&buffer)< 0)  {  
+            printf("%s\n",path);
+        return 1;
+        }
 
 struct passwd *pwd = getpwuid(buffer.st_uid);
 struct group *gr = getgrgid(buffer.st_gid);
+
 strftime (bufferTiempo, 100, "%d.%m.%Y %H:%M ", localtime(&buffer.st_mtime)); 
  
     printf( (S_ISDIR(buffer.st_mode)) ? "d" : "-");
@@ -43,10 +47,12 @@ strftime (bufferTiempo, 100, "%d.%m.%Y %H:%M ", localtime(&buffer.st_mtime));
  
     printf("%s",bufferTiempo);
    printf("%s\n",path);
+    return 0;
 }
 void directorio(const char *path){
-
-
+    
+DIR *dir;
+struct dirent *mi_dir;
 dir = opendir(path);
     
 while(( mi_dir = readdir(dir)) != NULL){
@@ -54,8 +60,7 @@ while(( mi_dir = readdir(dir)) != NULL){
         if(!strcmp(query,"*"))
             query = mi_dir->d_name;
         if(!strcmp(mi_dir->d_name,query)){
-                stat(mi_dir->d_name,&buffer);
-                archivo(buffer,mi_dir->d_name);
+                archivo(mi_dir->d_name);
         }
 }
 }
