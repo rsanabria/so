@@ -1,13 +1,11 @@
-extern char *query;
-extern struct stat buffer;
+extern char *q1,*q2,*q3;
+extern char *b1,*b2,*b3;
+struct stat buffer;
 
-int archivo(const char * path){
 
-char tiempo[100],bufferTiempo[100];
-        if(stat(path,&buffer)< 0)  {  
-            printf("%s\n",path);
-        return 1;
-        }
+int miStat(const char *path){
+	
+	char tiempo[100],bufferTiempo[100];
 
 struct passwd *pwd = getpwuid(buffer.st_uid);
 struct group *gr = getgrgid(buffer.st_gid);
@@ -34,9 +32,30 @@ strftime (bufferTiempo, 100, "%d.%m.%Y %H:%M ", localtime(&buffer.st_mtime));
  
     printf("%s",bufferTiempo);
    printf("%s\n",path);
+   return 0;
+	}
+
+int buscarArchivo(const char * path,char * query){
+
+        if(stat(path,&buffer)< 0)  {  
+            printf("%s\n",path);
+        return 1;
+        }
+		if(query){		
+		if(!strcmp(query,"dir")){ 
+			if (S_ISDIR(buffer.st_mode))
+				miStat(path);
+		}
+		else if (!strcmp(query,"reg")){ 
+			if (S_ISREG(buffer.st_mode))
+				miStat(path);
+	}
+}
+	else
+		miStat(path);
     return 0;
 }
-void directorio(const char *path){
+void busquedaNombre(const char *path, char * query){
     
 DIR *dir;
 struct dirent *mi_dir;
@@ -50,7 +69,7 @@ while(( mi_dir = readdir(dir)) != NULL){
                 strcpy(ruta, path);
                 strcat(ruta, "/");
                 strcat(ruta, mi_dir->d_name);
-                archivo(ruta);
+                buscarArchivo(ruta,NULL);
         }
 }
 }
@@ -58,12 +77,43 @@ while(( mi_dir = readdir(dir)) != NULL){
 closedir(dir);
 }
 
-int callback(const char *nombre, const struct stat *status, int type){
 
-if(type == FTW_NS)
-   return 0;
-if (type == FTW_D)
-    directorio(nombre);
-
-return 0;
+void busquedaTipo(const char *path, char * query){    
+DIR *dir;
+struct dirent *mi_dir;
+dir = opendir(path);
+char ruta[1024];   
+while(( mi_dir = readdir(dir)) != NULL){
+   if(strcmp(mi_dir->d_name,"." ) && strcmp(mi_dir->d_name,".."))  {
+        strcpy(ruta, path);
+        strcat(ruta, "/");
+        strcat(ruta, mi_dir->d_name);
+        buscarArchivo(ruta,query);
+        }
 }
+
+    
+closedir(dir);
+}
+
+int callbackUno(const char *nombre, const struct stat *status, int type){
+	
+	if(type == FTW_NS)
+	   return 0;
+	 if (type == FTW_D){
+	   if (!strcmp(b1,"-nombre")){
+	     busquedaNombre(nombre,q1);
+	   }
+	   else if (!strcmp(b1,"-tipo")){
+		   
+		   busquedaTipo(nombre,q1);
+		}
+		else if(!strcmp(b1,"-permisos")){
+		   //busquedaPermisos(nombre,q1);		
+		}   
+	   
+	   
+	 }
+	return 0;
+	}
+	
