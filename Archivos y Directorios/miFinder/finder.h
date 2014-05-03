@@ -16,7 +16,7 @@ int prepararArgumentos(int numeroArgumentos, char *argumentos[]){
 			banderaPermisos = argumentos[i];
 			queryPermisos   = argumentos[i+1];
 		}
-		else if ( !strcmp(argumentos[i],"-tipos")){
+		else if ( !strcmp(argumentos[i],"-tipo")){
 			banderaTipos = argumentos[i];
 			queryTipos   = argumentos[i+1];
 		}
@@ -72,33 +72,45 @@ void analizarPerm(const char * path, const char * query){
 	}
 void analizarDir(const char * path, const char * query){
 	
-			if(multiplesArgumentos)
-				if(query != NULL){
+			if(multiplesArgumentos){
+
+				if(query){
 					if(!strcmp(query,"dir")){ 
-						if (S_ISDIR(buffer.st_mode))
+						if (S_ISDIR(buffer.st_mode)){
+							
 							analizarPerm(path,queryPermisos);
+						}
+						else
+							printf("no hay coincidencias\n");
 
 					}
 					else if (!strcmp(query,"reg")){ 
+						
 						if (S_ISREG(buffer.st_mode))
 							analizarPerm(path,queryPermisos);
+						else
+							printf("no hay coincidencias\n");
 
 					}
+					
 	
 				}
-				else
-					analizarPerm(path,queryPermisos); // si no hay queryTipos ve con la siguiente opcion Permisos
 				else{
-					if(!strcmp(query,"dir")){ 
-						if (S_ISDIR(buffer.st_mode))
-							miStat(path);
-					}
-					else if (!strcmp(query,"reg")){ 
-						if (S_ISREG(buffer.st_mode))
-							miStat(path);
-					}
+					//printf("%s\n",query);
+					analizarPerm(path,queryPermisos); // si no hay queryTipos ve con la siguiente opcion Permisos
+			    }
+			}
+			else{
+				if(!strcmp(query,"dir")){ 
+					if (S_ISDIR(buffer.st_mode))
+						miStat(path);
+				}
+				else if (!strcmp(query,"reg")){ 
+					if (S_ISREG(buffer.st_mode))
+						miStat(path);
+				}
 	
-				}	
+			}	
 			 
 }
 
@@ -116,8 +128,8 @@ int buscarArchivo(const char * path,char * query){
 		}
 		else if (query && (!strcmp(b1,"-permisos")))
 				analizarPerm(path,query);
-	else{	
-		miStat(path);
+		else{	
+			miStat(path);
 	}
 }	
     return 0;
