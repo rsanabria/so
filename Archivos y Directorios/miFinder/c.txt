@@ -1,0 +1,11 @@
+In file included from miFinder.c:2:0:
+finder.h:91:6: aviso: tipos en conflicto para ‘analizarPerm’ [activado por defecto]
+ void analizarPerm(const char * path, const char * query){
+      ^
+finder.h:65:8: nota: la declaración implícita previa de ‘analizarPerm’ estaba aquí
+        analizarPerm(path,queryPermisos);
+        ^
+finder.h: En la función ‘buscarArchivo’:
+finder.h:112:3: error: expected ‘;’ before ‘else’
+   else{
+   ^

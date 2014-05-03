@@ -1,6 +1,7 @@
 #ifndef _CABECERA_H_
 #define _CABECERA_H_
 #include<stdio.h>
+#include<stdlib.h>
 #include<sys/stat.h>
 #include<dirent.h>
 #include<sys/types.h>
