@@ -54,13 +54,16 @@ void directorio(const char *path){
 DIR *dir;
 struct dirent *mi_dir;
 dir = opendir(path);
-    
+char ruta[1024];   
 while(( mi_dir = readdir(dir)) != NULL){
    if(strcmp(mi_dir->d_name,"." ) && strcmp(mi_dir->d_name,".."))  {
         if(!strcmp(query,"*"))
             query = mi_dir->d_name;
         if(!strcmp(mi_dir->d_name,query)){
-                archivo(mi_dir->d_name);
+                strcpy(ruta, path);
+                strcat(ruta, "/");
+                strcat(ruta, mi_dir->d_name);
+                archivo(ruta);
         }
 }
 }
