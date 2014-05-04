@@ -1,7 +1,7 @@
 #include"cabecera.h"
 #include"finder.h"
 
-char *q1, *queryNombre,*queryPermisos,*queryTipos, *queryUsuario, *queryTamanio, *queryExec[1024] ; 
+char *q1, *queryNombre,*queryPermisos,*queryTipos, *queryUsuario,  *queryExec[1024] ; 
 char *b1, *banderaNombre,*banderaPermisos,*banderaTipos, *banderaUsuario = NULL;
 int  argumentosExec;
 struct stat buffer;
