@@ -9,8 +9,11 @@
 #include<unistd.h>
 #include<fcntl.h>
 #include<time.h>
-#include <pwd.h>
-#include <grp.h>
+#include<pwd.h>
+#include<grp.h>
 #include<string.h>
+#include<stdint.h>
+#include<fstab.h>
+#include<langinfo.h>
 #endif
 

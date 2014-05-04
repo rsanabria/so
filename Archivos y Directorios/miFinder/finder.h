@@ -1,11 +1,11 @@
-extern char *q1, *queryNombre,*queryPermisos,*queryTipos, *queryUsaurio ;
-extern char *b1, *banderaNombre,*banderaPermisos,*banderaTipos, *banderaUsuario, *banderaExec;
-extern int multiplesArgumentos;
+extern char  *queryNombre,*queryPermisos,*queryTipos, *queryUsuario, *queryExec[1024] ;
+extern char *banderaNombre,*banderaExec;
+extern int argumentosExec;
 struct stat buffer;
 
 
 int prepararArgumentos(int numeroArgumentos, char *argumentos[]){
-	int i;
+	int i,j, k =0;
 	
 	for (i = 2; i<numeroArgumentos;i++){
 		if ( !strcmp(argumentos[i],"-nombre")){
@@ -13,12 +13,23 @@ int prepararArgumentos(int numeroArgumentos, char *argumentos[]){
 			queryNombre   = argumentos[i+1];
 		}	
 		else if ( !strcmp(argumentos[i],"-permisos")){
-			banderaPermisos = argumentos[i];
+			//banderaPermisos = argumentos[i];
 			queryPermisos   = argumentos[i+1];
 		}
 		else if ( !strcmp(argumentos[i],"-tipo")){
-			banderaTipos = argumentos[i];
+			//banderaTipos = argumentos[i];
 			queryTipos   = argumentos[i+1];
+		}
+		else if (!strcmp(argumentos[i], "-usuario")){
+			//banderaUsuario = argumentos[i];
+			queryUsuario   = argumentos[i+1];
+		}
+		else if (!strcmp(argumentos[i], "-exec")){
+			for(j = i+1;j<numeroArgumentos;j++){
+				queryExec[k] = argumentos[j];
+				k++;
+				argumentosExec = k;
+			}
 		}
 	}
 	return 0;
@@ -28,10 +39,10 @@ int miStat(const char *path){
 	
 	char tiempo[100],bufferTiempo[100];
 
-struct passwd *pwd = getpwuid(buffer.st_uid);
-struct group *gr = getgrgid(buffer.st_gid);
+	struct passwd *pwd = getpwuid(buffer.st_uid);
+	struct group *gr = getgrgid(buffer.st_gid);
 
-strftime (bufferTiempo, 100, "%d.%m.%Y %H:%M ", localtime(&buffer.st_mtime)); 
+	strftime (bufferTiempo, 100, "%d.%m.%Y %H:%M ", localtime(&buffer.st_mtime)); 
  
     printf( (S_ISDIR(buffer.st_mode)) ? "d" : "-");
     printf( (buffer.st_mode & S_IRUSR) ? "r" : "-");
@@ -49,153 +60,113 @@ strftime (bufferTiempo, 100, "%d.%m.%Y %H:%M ", localtime(&buffer.st_mtime));
     printf("%s ", pwd->pw_name);
     printf("%s ", gr->gr_name);
         
-     printf("%d ",buffer.st_size);
+    printf("%d ",buffer.st_size);
  
     printf("%s",bufferTiempo);
-   printf("%s\n",path);
-   return 0;
-	}
+	printf("%s\n",path);
+	return 0;
+}
 
-
+void exec(const char * path,char *query[]){
+		if(query[0]){
+		query[argumentosExec] = (char *)path;
+		    if(fork() == 0)	
+				execvp(query[0],query);
+			else {
+				wait(0);
+				}
+		}
+		else{
+			miStat(path);
+					
+			}
+			
+}
 	
 void analizarPerm(const char * path, const char * query){
-			miStat(path);
-			//if (buffer.st_mode&077777 == atoi(query)){
-			////printf("%04o\n",buffer.st_mode&atoi(query));
-			//miStat(path);
-		//}
-			//else{
-				
-				//printf("%d",atoi(query));
-				//exit(1);
-			//}
+	if(query){
+		int statchmod = buffer.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO);
+		char permisos[15];
+		sprintf(permisos, "%04o", statchmod);
+		if (!strcmp(permisos,query)){
+			exec(path, queryExec);
+		}
 	}
+	else
+		exec(path,queryExec);
+}
+void analizarUsuario(const char * path, const char *query){
+	if (query){
+		
+		struct passwd *pwd = getpwuid(buffer.st_uid);
+		if(!strcmp(pwd->pw_name,query)){
+			analizarPerm(path,queryPermisos);
+		}
+	
+	}
+	else
+		analizarPerm(path, queryPermisos);
+	
+}
 void analizarDir(const char * path, const char * query){
 	
-			if(multiplesArgumentos){
 
 				if(query){
 					if(!strcmp(query,"dir")){ 
 						if (S_ISDIR(buffer.st_mode)){
 							
-							analizarPerm(path,queryPermisos);
+							analizarUsuario(path,queryUsuario);
 						}
-						else
-							printf("no hay coincidencias\n");
-
 					}
 					else if (!strcmp(query,"reg")){ 
 						
 						if (S_ISREG(buffer.st_mode))
-							analizarPerm(path,queryPermisos);
-						else
-							printf("no hay coincidencias\n");
-
+							analizarUsuario(path,queryUsuario);
 					}
 					
 	
 				}
 				else{
-					//printf("%s\n",query);
-					analizarPerm(path,queryPermisos); // si no hay queryTipos ve con la siguiente opcion Permisos
+					analizarUsuario(path,queryUsuario); // si no hay queryTipos ve con la siguiente opcion Usuario
 			    }
-			}
-			else{
-				if(!strcmp(query,"dir")){ 
-					if (S_ISDIR(buffer.st_mode))
-						miStat(path);
-				}
-				else if (!strcmp(query,"reg")){ 
-					if (S_ISREG(buffer.st_mode))
-						miStat(path);
-				}
-	
-			}	
+
+				
 			 
 }
 
-int buscarArchivo(const char * path,char * query){
-
-        if(stat(path,&buffer)< 0)  {  
-            printf("%s\n",path);
+int buscarArchivo(const char * path){
+	if(stat(path,&buffer)< 0)  {  
+		printf("%s\n",path);
         return 1;
-        }
-        if(multiplesArgumentos)
-			analizarDir(path,queryTipos);
-		else{
-		if(query && (!strcmp(b1,"-tipo"))){
-			analizarDir(path,query);		
-		}
-		else if (query && (!strcmp(b1,"-permisos")))
-				analizarPerm(path,query);
-		else{	
-			miStat(path);
-	}
-}	
-    return 0;
+    }
+	analizarDir(path,queryTipos);	
+	return 0;
 }
 
 void busquedaNombre(const char *path, char * query){
-    
-DIR *dir;
-struct dirent *mi_dir;
-dir = opendir(path);
-char ruta[1024];   
-while(( mi_dir = readdir(dir)) != NULL){
-   if(strcmp(mi_dir->d_name,"." ) && strcmp(mi_dir->d_name,".."))  {
-        if(!strcmp(query,"*"))
-            query = mi_dir->d_name;
-        if(!strcmp(mi_dir->d_name,query)){
-                strcpy(ruta, path);
-                strcat(ruta, "/");
-                strcat(ruta, mi_dir->d_name);
-                buscarArchivo(ruta,NULL);
-        }
-}
-}
-    
-closedir(dir);
-}
-
-
-void busqueda(const char *path, char * query){    
-DIR *dir;
-struct dirent *mi_dir;
-dir = opendir(path);
-char ruta[1024];   
-while(( mi_dir = readdir(dir)) != NULL){
-   if(strcmp(mi_dir->d_name,"." ) && strcmp(mi_dir->d_name,".."))  {
-        strcpy(ruta, path);
-        strcat(ruta, "/");
-        strcat(ruta, mi_dir->d_name);
-        buscarArchivo(ruta,query);
-        }
-}
-
-    
-closedir(dir);
-}
-
-int callbackUno(const char *nombre, const struct stat *status, int type){
-	
-	if(type == FTW_NS)
-	   return 0;
-	 if (type == FTW_D){
-	   if (!strcmp(b1,"-nombre")){
-	     busquedaNombre(nombre,q1);
-	   }
-	   else if (!strcmp(b1,"-tipo")){
-		   
-		   busqueda(nombre,q1);
+	DIR *dir;
+	struct dirent *mi_dir;
+	dir = opendir(path);
+	char ruta[1024];   
+	while(( mi_dir = readdir(dir)) != NULL){
+		if(strcmp(mi_dir->d_name,"." ) && strcmp(mi_dir->d_name,"..")){
+			strcpy(ruta, path);
+            strcat(ruta, "/");
+            strcat(ruta, mi_dir->d_name);
+			if(query){
+				if(!strcmp(mi_dir->d_name,query)){
+					buscarArchivo(ruta);
+				}
+			}
+			else
+				buscarArchivo(ruta);
+					
 		}
-		else if(!strcmp(b1,"-permisos")){
-		   busqueda(nombre,q1);		
-		}   
-	   
-	   
-	 }
-	return 0;
 	}
+    
+	closedir(dir);
+}
+
 	
 int callbackDos(const char *nombre, const struct stat *status, int type){
 	
@@ -204,6 +175,8 @@ int callbackDos(const char *nombre, const struct stat *status, int type){
 	 if (type == FTW_D){
 		 if (banderaNombre)
 			busquedaNombre(nombre,queryNombre);
+		else
+			busquedaNombre(nombre,NULL);
 	 }
 	return 0;
 	}
