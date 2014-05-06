@@ -43,8 +43,43 @@ int miStat(const char *path){
 	struct group *gr = getgrgid(buffer.st_gid);
 
 	strftime (bufferTiempo, 100, "%d.%m.%Y %H:%M ", localtime(&buffer.st_mtime)); 
- 
-    printf( (S_ISDIR(buffer.st_mode)) ? "d" : "-");
+	
+	switch( buffer.st_mode & S_IFMT) {
+	case	S_IFDIR:	
+	  printf("d");
+	  break;
+	case	S_IFCHR:	
+	  printf("c");
+	  break;
+	case	S_IFBLK:	
+	  printf("b");
+	  break;
+	case	S_IFREG:	
+	  printf("-");
+	  break;
+#ifndef SYSV
+	case	S_IFLNK:	
+	  printf("l");
+	  break;
+#ifndef BSD2_9
+	case	S_IFSOCK:	
+	  printf("s");
+	  break;
+#endif BSD2_9
+#else SYSV
+	case	S_IFIFO:	
+	  printf("f");
+	  break;
+#endif SYSV
+#ifdef MASSCOMP
+	case	S_IFCTG:	
+	  printf("c");
+	  break;
+#endif MASSCOMP
+	default		:	
+	  printf("?");
+	  break;
+	}
     printf( (buffer.st_mode & S_IRUSR) ? "r" : "-");
     printf( (buffer.st_mode & S_IWUSR) ? "w" : "-");
     printf( (buffer.st_mode & S_IXUSR) ? "x" : "-");
@@ -124,26 +159,38 @@ void analizarDir(const char * path, const char * query){
 	
 
 				if(query){
-					if(!strcmp(query,"dir")){ 
-						if (S_ISDIR(buffer.st_mode)){
-							
-							analizarUsuario(path,queryUsuario);
-						}
-					}
-					else if (!strcmp(query,"reg")){ 
-						
-						if (S_ISREG(buffer.st_mode))
-							analizarUsuario(path,queryUsuario);
-					}
-					
-	
+				  if(!strcmp(query,"dir")){ 
+				    if (S_ISDIR(buffer.st_mode))
+				      analizarUsuario(path,queryUsuario);
+				  }
+				  else if (!strcmp(query,"reg")){ 
+				    if (S_ISREG(buffer.st_mode))
+				      analizarUsuario(path,queryUsuario);
+				  }
+				/*  else if (!strcmp(query,"caracter")){ 
+				    if (S_ISCHR(buffer.st_mode))
+				      analizarUsuario(path,queryUsuario);
+				  }
+				  else if (!strcmp(query,"bloque")){	
+				    if (S_ISBLK(buffer.st_mode))
+				      analizarUsuario(path,queryUsuario);
+				  }
+				  else if (!strcmp(query,"link")){ 
+				    if (S_ISLNK(buffer.st_mode))
+				      analizarUsuario(path,queryUsuario);
+				  }
+				  else if (!strcmp(query,"socket")){ 
+				    if (S_ISSOCK(buffer.st_mode))
+				      analizarUsuario(path,queryUsuario);
+				  }
+				  else if (!strcmp(query,"fifo")){ 
+				    if (S_ISFIFO(buffer.st_mode))
+				      analizarUsuario(path,queryUsuario);
+				  }*/
 				}
 				else{
-					analizarUsuario(path,queryUsuario); // si no hay queryTipos ve con la siguiente opcion Usuario
+				  analizarUsuario(path,queryUsuario); // si no hay queryTipos ve con la siguiente opcion Usuario
 			    }
-
-				
-			 
 }
 
 int buscarArchivo(const char * path){
